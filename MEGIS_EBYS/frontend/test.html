@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini API Anahtarı Test Aracı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Gemini API Anahtarı Test Aracı</h1>
+        <p class="text-gray-600 mb-6">Bu araç, API anahtarınızın ve Google Cloud proje ayarlarınızın doğru çalışıp çalışmadığını kontrol eder.</p>
+
+        <div class="space-y-4">
+            <div>
+                <label for="apiKey" class="block text-sm font-medium text-gray-700 mb-1">Google AI API Anahtarınız</label>
+                <input type="text" id="apiKey" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="API anahtarınızı buraya yapıştırın...">
+            </div>
+            <button id="testButton" class="w-full bg-blue-600 text-white font-semibold px-4 py-2.5 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2">
+                <span>API'yi Test Et</span>
+            </button>
+        </div>
+
+        <div class="mt-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-2">Sonuç</h2>
+            <div class="bg-gray-50 p-4 rounded-lg border h-64 overflow-auto">
+                <div id="loader" class="loader hidden mx-auto"></div>
+                <pre id="result" class="text-sm text-gray-700 whitespace-pre-wrap break-all"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testButton').addEventListener('click', async () => {
+            const apiKey = document.getElementById('apiKey').value;
+            const resultDiv = document.getElementById('result');
+            const loader = document.getElementById('loader');
+            const button = document.getElementById('testButton');
+
+            if (!apiKey) {
+                resultDiv.textContent = 'Lütfen bir API anahtarı girin.';
+                return;
+            }
+
+            // Arayüzü temizle ve yükleniyor durumunu başlat
+            resultDiv.textContent = '';
+            loader.classList.remove('hidden');
+            button.disabled = true;
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{
+                    parts: [{ text: "Merhaba dünya!" }]
+                }]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Hata durumunda, Google'dan gelen detaylı hata mesajını göster
+                    resultDiv.textContent = `HATA ${response.status}:\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    // Başarılı olursa, gelen cevabı göster
+                    resultDiv.textContent = `BAŞARILI:\n\n${JSON.stringify(data, null, 2)}`;
+                }
+
+            } catch (error) {
+                // Ağ hatası gibi durumlarda hatayı göster
+                resultDiv.textContent = `BİR HATA OLUŞTU:\n\n${error.toString()}`;
+            } finally {
+                // Yükleniyor durumunu bitir
+                loader.classList.add('hidden');
+                button.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>

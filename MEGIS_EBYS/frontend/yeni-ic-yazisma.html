@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MEGİS - Yeni İç Yazışma</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .sidebar { transition: transform 0.3s ease-in-out; }
+        .content { transition: margin-left 0.3s ease-in-out; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        #gonder-spinner.loader {
+            border-top-color: #ffffff;
+            width: 16px;
+            height: 16px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside id="sidebar" class="sidebar bg-gray-800 text-white w-64 space-y-6 py-7 px-2 absolute inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 z-30">
+        <a href="anasayfa.html" class="text-white flex items-center space-x-2 px-4">
+            <i data-lucide="file-archive-2" class="w-8 h-8"></i>
+            <span class="text-2xl font-extrabold">MEGİS EBYS</span>
+        </a>
+        <nav>
+            <a href="anasayfa.html" class="flex items-center space-x-3 hover:bg-gray-700 py-2.5 px-4 rounded-md transition duration-200"><i data-lucide="layout-dashboard"></i><span>Anasayfa</span></a>
+            <a href="izin-yonetimi.html" class="flex items-center space-x-3 hover:bg-gray-700 py-2.5 px-4 rounded-md transition duration-200"><i data-lucide="calendar-check"></i><span>İzin Yönetimi</span></a>
+            <a href="gelen-evrak.html" class="flex items-center space-x-3 hover:bg-gray-700 py-2.5 px-4 rounded-md transition duration-200"><i data-lucide="inbox"></i><span>Gelen Evrak</span></a>
+            <a href="giden-evrak.html" class="flex items-center space-x-3 bg-gray-900 text-white py-2.5 px-4 rounded-md transition duration-200"><i data-lucide="send"></i><span>Giden Evrak</span></a>
+            <a id="link-kullanici-yonetimi" href="kullanici-yonetimi.html" class="flex items-center space-x-3 hover:bg-gray-700 py-2.5 px-4 rounded-md transition duration-200"><i data-lucide="users"></i><span>Kullanıcı Yönetimi</span></a>
+            <a id="link-kurum-yonetimi" href="kurum-yonetimi.html" class="flex items-center space-x-3 hover:bg-gray-700 py-2.5 px-4 rounded-md transition duration-200"><i data-lucide="building-2"></i><span>Kurum Yönetimi</span></a>
+            <a id="link-ayarlar" href="ayarlar.html" class="flex items-center space-x-3 hover:bg-gray-700 py-2.5 px-4 rounded-md transition duration-200"><i data-lucide="settings"></i><span>Ayarlar</span></a>
+        </nav>
+    </aside>
+
+    <div class="content flex-1 flex flex-col overflow-hidden">
+        <header class="flex justify-between items-center p-4 bg-white border-b">
+            <div class="flex items-center">
+                <button id="menu-button" class="text-gray-500 focus:outline-none md:hidden"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                <div class="flex items-center">
+                    <a href="giden-evrak.html" class="text-gray-500 hover:text-blue-600"><i data-lucide="arrow-left" class="w-5 h-5"></i></a>
+                    <h1 class="text-2xl font-semibold text-gray-800 ml-4">Kurum İçi Yazışma Oluştur</h1>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-f0f2f5 p-6">
+            <form id="ic-yazisma-form" class="bg-white p-6 rounded-xl shadow-md">
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gönderim Tipi</label>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center">
+                                <input id="gonderim-tipi-kisi" name="gonderimTipi" type="radio" value="kisi" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
+                                <label for="gonderim-tipi-kisi" class="ml-2 block text-sm text-gray-900">Kişiye Gönder</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="gonderim-tipi-birim" name="gonderimTipi" type="radio" value="birim" class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                <label for="gonderim-tipi-birim" class="ml-2 block text-sm text-gray-900">Birime Gönder</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="alici-kisi-alanı">
+                        <label for="alici-kullanici-select" class="block text-sm font-medium text-gray-700 mb-1">Alıcı Personel</label>
+                        <select id="alici-kullanici-select" name="aliciKullaniciId" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required></select>
+                    </div>
+                    <div id="alici-birim-alanı" class="hidden">
+                        <label for="alici-birim-select" class="block text-sm font-medium text-gray-700 mb-1">Alıcı Birim</label>
+                        <select id="alici-birim-select" name="aliciBirimId" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"></select>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="sablon-select" class="block text-sm font-medium text-gray-700 mb-1">Şablon Kullan (İsteğe Bağlı)</label>
+                            <select id="sablon-select" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Şablon Seçiniz...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="evrak-turu-select" class="block text-sm font-medium text-gray-700 mb-1">Evrak Türü</label>
+                            <select id="evrak-turu-select" name="evrakTuruId" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required></select>
+                        </div>
+                    </div>
+                    
+                    <div id="ai-container">
+                        <label for="ai-prompt" class="block text-sm font-medium text-gray-700 mb-1">Yapay Zeka Komutu</label>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="ai-prompt" placeholder="Örn: 3 günlük rapor izni talebi hakkında" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <button type="button" id="yapay-zeka-btn" class="flex-shrink-0 flex items-center gap-2 bg-purple-600 text-white font-semibold px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                <span class="hidden md:inline">Oluştur</span>
+                            </button>
+                            <div id="loading-spinner" class="loader hidden"></div>
+                        </div>
+                    </div>
+
+                    <div id="editor-container">
+                        <label for="konu" class="block text-sm font-medium text-gray-700 mb-1">Konu / Metin</label>
+                        <textarea id="konu" name="konu" rows="10" class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" required></textarea>
+                    </div>
+
+                    <div id="template-placeholders-container" class="hidden">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Şablon Alanlarını Doldur</h3>
+                        <div id="placeholder-inputs" class="space-y-4">
+                            <!-- Yer tutucular buraya dinamik olarak eklenecek -->
+                        </div>
+                    </div>
+                    
+                    <div id="file-upload-container">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Dosya Eki</label>
+                        <input type="file" id="file-upload" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+                    </div>
+                </div>
+                <div class="flex justify-end items-center pt-6 mt-6 border-t">
+                    <button type="submit" id="gonder-btn" class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-200 flex items-center justify-center gap-2 w-36 disabled:opacity-75">
+                        <i data-lucide="send" id="gonder-btn-icon"></i>
+                        <span id="gonder-btn-text">Gönder</span>
+                        <div id="gonder-spinner" class="loader hidden"></div>
+                    </button>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        const GEMINI_API_KEY = "AIzaSyAG0ZuNE1DHYgAcbGoS85w9CNnqJQWF0-U"; // <-- LÜTFEN GEÇERLİ ANAHTARINIZI SADECE BURAYA GİRİN
+
+        const API_BASE_URL = "https://localhost:7281";
+        const currentUser = JSON.parse(localStorage.getItem('kullanici'));
+        let selectedTemplatePlaceholders = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            setupEventListeners();
+            populateAliciKullanicilarDropdown();
+            populateAliciBirimlerDropdown();
+            populateEvrakTurleriDropdown();
+            populateSablonlarDropdown();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('menu-button').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('-translate-x-full'));
+            
+            document.getElementById('yapay-zeka-btn').addEventListener('click', handleAIButtonClick);
+            
+            document.getElementById('ic-yazisma-form').addEventListener('submit', handleFormSubmit);
+            
+            document.getElementById('sablon-select').addEventListener('change', handleSablonChange);
+            
+            document.querySelectorAll('input[name="gonderimTipi"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const isKisi = e.target.value === 'kisi';
+                    document.getElementById('alici-kisi-alanı').classList.toggle('hidden', !isKisi);
+                    document.getElementById('alici-birim-alanı').classList.toggle('hidden', isKisi);
+                    document.getElementById('alici-kullanici-select').required = isKisi;
+                    document.getElementById('alici-birim-select').required = !isKisi;
+                });
+            });
+        }
+
+        function handleAIButtonClick() {
+            const sablonId = document.getElementById('sablon-select').value;
+            if (sablonId && selectedTemplatePlaceholders.length > 0) {
+                handleAIRequestForTemplate();
+            } else {
+                handleAIRequest();
+            }
+        }
+        
+        async function populateSablonlarDropdown() {
+            const select = document.getElementById('sablon-select');
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/Sablonlar`);
+                if (!res.ok) throw new Error('Şablonlar yüklenemedi.');
+                const sablonlar = await res.json();
+                sablonlar.forEach(s => select.innerHTML += `<option value="${s.id}">${s.ad}</option>`);
+            } catch (e) { console.error(e); }
+        }
+
+        async function handleSablonChange(event) {
+            const sablonId = event.target.value;
+            const editorContainer = document.getElementById('editor-container');
+            const placeholdersContainer = document.getElementById('template-placeholders-container');
+            const fileUploadContainer = document.getElementById('file-upload-container');
+            const aiContainer = document.getElementById('ai-container');
+            const placeholderInputsDiv = document.getElementById('placeholder-inputs');
+            const konuTextarea = document.getElementById('konu');
+
+            if (!sablonId) {
+                editorContainer.classList.remove('hidden');
+                fileUploadContainer.classList.remove('hidden');
+                placeholdersContainer.classList.add('hidden');
+                placeholderInputsDiv.innerHTML = '';
+                aiContainer.classList.remove('hidden');
+                selectedTemplatePlaceholders = [];
+                konuTextarea.value = '';
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/Sablonlar/placeholders/${sablonId}`);
+                if (!res.ok) throw new Error('Şablon yer tutucuları alınamadı.');
+                selectedTemplatePlaceholders = await res.json(); 
+
+                placeholderInputsDiv.innerHTML = '';
+                
+                if (selectedTemplatePlaceholders.length > 0) {
+                    editorContainer.classList.add('hidden');
+                    fileUploadContainer.classList.add('hidden');
+                    placeholdersContainer.classList.remove('hidden');
+                    aiContainer.classList.remove('hidden');
+
+                    selectedTemplatePlaceholders.forEach(ph => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `
+                            <label for="ph-${ph}" class="block text-sm font-medium text-gray-700 mb-1">${ph.replace(/_/, ' ')}</label>
+                            <input type="text" id="ph-${ph}" name="placeholder-${ph}" class="w-full border-gray-300 rounded-lg shadow-sm" placeholder="${ph.replace(/_/, ' ')}">
+                        `;
+                        placeholderInputsDiv.appendChild(div);
+                    });
+                } else {
+                    editorContainer.classList.remove('hidden');
+                    fileUploadContainer.classList.remove('hidden');
+                    placeholdersContainer.classList.add('hidden');
+                    aiContainer.classList.remove('hidden');
+
+                    const textRes = await fetch(`${API_BASE_URL}/api/Sablonlar/get-text/${sablonId}`);
+                    if (textRes.ok) {
+                        const sablonMetni = await textRes.json();
+                        konuTextarea.value = sablonMetni.text || '';
+                    }
+                }
+            } catch (e) {
+                console.error(`Hata: ${e.message}`);
+                editorContainer.classList.remove('hidden');
+                placeholdersContainer.classList.add('hidden');
+                fileUploadContainer.classList.remove('hidden');
+            }
+        }
+        
+        async function handleAIRequestForTemplate() {
+            const promptInput = document.getElementById('ai-prompt');
+            const promptText = promptInput.value;
+            const aiButton = document.getElementById('yapay-zeka-btn');
+            const spinner = document.getElementById('loading-spinner');
+
+            if (!promptText.trim()) {
+                alert("Lütfen yapay zekaya bir komut girin.");
+                return;
+            }
+            if (!selectedTemplatePlaceholders || selectedTemplatePlaceholders.length === 0) {
+                alert("Bu şablon için doldurulacak alan bulunmuyor. Yapay zeka bu şablonu dolduramaz.");
+                return;
+            }
+
+            aiButton.disabled = true;
+            spinner.classList.remove('hidden');
+            aiButton.classList.add('hidden');
+
+            try {
+                const schemaProperties = {};
+                selectedTemplatePlaceholders.forEach(ph => {
+                    schemaProperties[ph] = { "type": "STRING" };
+                });
+
+                const responseSchema = {
+                    type: "OBJECT",
+                    properties: schemaProperties
+                };
+
+                const placeholderString = selectedTemplatePlaceholders.join(', ');
+                const fullPrompt = `Kullanıcının isteğine göre şablonu doldur. İstek: "${promptText}". Doldurulacak alanlar: ${placeholderString}. Cevabını sadece istenen şemaya uygun bir JSON nesnesi olarak ver.`;
+
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: fullPrompt }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: responseSchema
+                    }
+                };
+                
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+                
+                // DÜZELTME: Teşhis için konsol logları eklendi
+                console.log("Şablonlu AI İsteği Gönderiliyor...");
+                console.log("URL:", apiUrl);
+                console.log("Payload:", JSON.stringify(payload, null, 2));
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Yapay zeka servisinden hata alındı: ${response.status} ${errorText}`);
+                }
+                
+                if (response.status === 204) {
+                    throw new Error("Yapay zeka servisinden boş yanıt (204 No Content) alındı. Komutunuz güvenlik filtrelerine takılmış olabilir.");
+                }
+                
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const jsonText = result.candidates[0].content.parts[0].text;
+                    const filledPlaceholders = JSON.parse(jsonText);
+
+                    document.querySelectorAll('#placeholder-inputs input').forEach(input => {
+                        const placeholderName = input.id.replace('ph-', '');
+                        if (filledPlaceholders[placeholderName]) {
+                            input.value = filledPlaceholders[placeholderName];
+                        }
+                    });
+                } else {
+                    throw new Error("Yapay zeka yanıtı boş veya beklenmedik formatta.");
+                }
+
+            } catch (error) {
+                console.error("Yapay Zeka Hatası:", error);
+                alert(`Metin oluşturulurken bir hata oluştu: ${error.message}`);
+            } finally {
+                aiButton.disabled = false;
+                spinner.classList.add('hidden');
+                aiButton.classList.remove('hidden');
+            }
+        }
+
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const submitButton = document.getElementById('gonder-btn');
+            const buttonText = document.getElementById('gonder-btn-text');
+            const buttonIcon = document.getElementById('gonder-btn-icon');
+            const spinner = document.getElementById('gonder-spinner');
+
+            submitButton.disabled = true;
+            spinner.classList.remove('hidden');
+            buttonText.textContent = 'Gönderiliyor...';
+            buttonIcon.classList.add('hidden');
+
+            try {
+                const form = event.target;
+                const formData = new FormData(form);
+                const evrakData = Object.fromEntries(formData.entries());
+                const sablonId = document.getElementById('sablon-select').value;
+
+                if (!evrakData.evrakTuruId) {
+                    throw new Error("Lütfen bir evrak türü seçiniz.");
+                }
+                if (evrakData.gonderimTipi === 'kisi' && !evrakData.aliciKullaniciId) {
+                    throw new Error("Lütfen bir alıcı personel seçiniz.");
+                }
+                if (evrakData.gonderimTipi === 'birim' && !evrakData.aliciBirimId) {
+                    throw new Error("Lütfen bir alıcı birim seçiniz.");
+                }
+
+                if (sablonId && selectedTemplatePlaceholders.length > 0) {
+                    const placeholders = {};
+                    document.querySelectorAll('#placeholder-inputs input').forEach(input => {
+                        const phKey = `[${input.id.replace('ph-', '')}]`;
+                        placeholders[phKey] = input.value;
+                    });
+                    
+                    const fillRes = await fetch(`${API_BASE_URL}/api/Sablonlar/fill/${sablonId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ placeholders: placeholders })
+                    });
+                    if (!fillRes.ok) throw new Error('Şablon doldurma işlemi başarısız oldu.');
+                    const fillResult = await fillRes.json();
+                    
+                    evrakData.konu = placeholders['[Konu]'] || 'Şablon ile oluşturulan evrak';
+                    evrakData.dosyaYolu = fillResult.filePath;
+                } else {
+                    evrakData.konu = document.getElementById('konu').value;
+                    
+                    const fileInput = document.getElementById('file-upload');
+                    evrakData.dosyaYolu = null;
+                    if (fileInput.files.length > 0) {
+                        const fileFormData = new FormData();
+                        fileFormData.append('file', fileInput.files[0]);
+                        const uploadResponse = await fetch(`${API_BASE_URL}/api/Dosyalar/upload`, {
+                            method: 'POST',
+                            body: fileFormData,
+                        });
+                        if (!uploadResponse.ok) throw new Error(`Dosya yüklenemedi: ${await uploadResponse.text()}`);
+                        const uploadResult = await uploadResponse.json();
+                        evrakData.dosyaYolu = uploadResult.filePath;
+                    }
+                }
+
+                if (!currentUser) {
+                    throw new Error("Gönderen kullanıcı bilgisi bulunamadı. Lütfen tekrar giriş yapın.");
+                }
+                if (!evrakData.konu || !evrakData.konu.trim()) {
+                    throw new Error("Konu / Metin alanı boş bırakılamaz.");
+                }
+
+                evrakData.yonu = 1;
+                evrakData.durum = 6;
+                evrakData.evrakTuruId = parseInt(evrakData.evrakTuruId);
+                evrakData.tarih = new Date().toISOString();
+                evrakData.dahiliMi = true;
+                evrakData.gonderenKullaniciId = currentUser.id;
+
+                if (evrakData.gonderimTipi === 'kisi') {
+                    evrakData.aliciKullaniciId = parseInt(evrakData.aliciKullaniciId);
+                    delete evrakData.aliciBirimId;
+                } else {
+                    evrakData.aliciBirimId = parseInt(evrakData.aliciBirimId);
+                    delete evrakData.aliciKullaniciId;
+                }
+                delete evrakData.gonderimTipi;
+
+                Object.keys(evrakData).forEach(key => {
+                    if (key.startsWith('placeholder-')) {
+                        delete evrakData[key];
+                    }
+                });
+
+                const response = await fetch(`${API_BASE_URL}/api/Evraklar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(evrakData)
+                });
+                if (!response.ok) throw new Error(`Evrak gönderilemedi: ${await response.text()}`);
+                
+                alert("Yazışma başarıyla gönderildi!");
+                window.location.href = 'giden-evrak.html';
+
+            } catch (error) {
+                console.error('İç Yazışma Gönderme Hatası:', error);
+                alert(`Yazışma gönderilirken bir hata oluştu.\n\nDetay: ${error.message}`);
+            } finally {
+                submitButton.disabled = false;
+                spinner.classList.add('hidden');
+                buttonText.textContent = 'Gönder';
+                buttonIcon.classList.remove('hidden');
+            }
+        }
+        
+        async function populateAliciKullanicilarDropdown() {
+            const select = document.getElementById('alici-kullanici-select');
+            select.innerHTML = '<option value="">Personel Seçiniz...</option>';
+            if (!currentUser) return;
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/Kullanicilar`);
+                if (!res.ok) throw new Error('Kullanıcılar yüklenemedi.');
+                let kullanicilar = await res.json();
+                
+                const myId = currentUser.id;
+                const myYetki = currentUser.yetki;
+                let filteredUsers = [];
+
+                if (myYetki === 0) { // Personel
+                    filteredUsers = kullanicilar.filter(k => k.id !== myId && (k.yetki === 0 || k.yetki === 1));
+                } else if (myYetki === 1) { // Birim Amiri
+                    filteredUsers = kullanicilar.filter(k => k.id !== myId && k.yetki === 2);
+                } else if (myYetki === 2) { // Kurum Amiri
+                    filteredUsers = kullanicilar.filter(k => k.id !== myId);
+                }
+
+                filteredUsers.forEach(k => select.innerHTML += `<option value="${k.id}">${k.adSoyad}</option>`);
+            } catch (e) { 
+                console.error(e);
+                alert("Alıcı personel listesi yüklenirken bir hata oluştu. Lütfen API bağlantınızı kontrol edin.");
+            }
+        }
+
+        async function populateAliciBirimlerDropdown() {
+            const select = document.getElementById('alici-birim-select');
+            select.innerHTML = '<option value="">Birim Seçiniz...</option>';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/Birimler`);
+                if (!res.ok) throw new Error('Birimler yüklenemedi.');
+                const birimler = await res.json();
+                birimler.forEach(b => select.innerHTML += `<option value="${b.id}">${b.ad}</option>`);
+            } catch (e) { 
+                console.error(e);
+                alert("Alıcı birim listesi yüklenirken bir hata oluştu. Lütfen API bağlantınızı kontrol edin.");
+            }
+        }
+        
+        async function populateEvrakTurleriDropdown() {
+            const select = document.getElementById('evrak-turu-select');
+            select.innerHTML = '<option value="">Evrak Türü Seçiniz...</option>';
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/EvrakTurleri`);
+                if (!res.ok) throw new Error('Evrak Türleri yüklenemedi.');
+                const turler = await res.json();
+                turler.forEach(t => select.innerHTML += `<option value="${t.id}">${t.ad}</option>`);
+            } catch (e) { 
+                console.error(e);
+                alert("Evrak türleri listesi yüklenirken bir hata oluştu. Lütfen API bağlantınızı kontrol edin.");
+            }
+        }
+
+        async function handleAIRequest() {
+            const promptInput = document.getElementById('ai-prompt');
+            const promptText = promptInput.value;
+            const aiButton = document.getElementById('yapay-zeka-btn');
+            const spinner = document.getElementById('loading-spinner');
+            const konuTextarea = document.getElementById('konu');
+            
+            if (!konuTextarea) {
+                alert("Metin alanı bulunamadı.");
+                return;
+            }
+            if (!promptText.trim()) {
+                alert("Lütfen yapay zekaya bir komut girin.");
+                return;
+            }
+
+            aiButton.disabled = true;
+            spinner.classList.remove('hidden');
+            aiButton.classList.add('hidden');
+
+            try {
+                const fullPrompt = `Sen bir devlet memurusun. Sana verilen anahtar kelimeleri kullanarak, resmi bir kurum içi yazışma metni oluştur. Metin sadece resmi içeriği kapsamalı, selamlama veya "saygılarımla" gibi kapanış ifadeleri içermemeli. Anahtar kelimeler: "${promptText}"`;
+                
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: fullPrompt }]
+                    }]
+                };
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${GEMINI_API_KEY}`;
+                
+                // DÜZELTME: Teşhis için konsol logları eklendi
+                console.log("Şablonsuz AI İsteği Gönderiliyor...");
+                console.log("URL:", apiUrl);
+                console.log("Payload:", JSON.stringify(payload, null, 2));
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Yapay zeka servisinden hata alındı: ${response.status} ${errorText}`);
+                }
+                
+                if (response.status === 204) {
+                    throw new Error("Yapay zeka servisinden boş yanıt (204 No Content) alındı. Bu genellikle komutunuzun güvenlik filtrelerine takılması nedeniyle olur. Lütfen komutunuzu değiştirip tekrar deneyin.");
+                }
+                
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    konuTextarea.value = text || '';
+                } else {
+                    throw new Error("Yapay zeka yanıtı boş veya beklenmedik formatta.");
+                }
+
+            } catch (error) {
+                console.error("Yapay Zeka Hatası:", error);
+                alert(`Metin oluşturulurken bir hata oluştu: ${error.message}`);
+            } finally {
+                aiButton.disabled = false;
+                spinner.classList.add('hidden');
+                aiButton.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
